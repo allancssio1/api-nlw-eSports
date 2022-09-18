@@ -14,4 +14,20 @@ model Game {
   id        String @id
   title     String
   bannerUrl String
+  Ad        Ad[]
+}
+
+model Ad {
+  id              String   @id
+  name            String
+  yeartPlaying    Int
+  discord         String
+  weekDays        String
+  hourStart       Int
+  hourEnd         Int
+  useVoiceChannel Boolean
+  createAt        DateTime @default(now())
+  // um ads é atribuido a um game, e um game pode ter vários ads
+  game            Game     @relation(fields: [gameId], references: [id])
+  gameId          String
 }

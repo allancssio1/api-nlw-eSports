@@ -1,10 +1,17 @@
-import express, { response } from "express";
-
+import express from "express";
+import { PrismaClient } from "@prisma/client";
+/**
+ * Para usar o prisma foi instalado o @prisma/client como dependencia de produção.
+ * instanciado ele numa constante para ter acesso ao banco de dados.
+ */
 const app = express();
+const prisma = new PrismaClient();
 
-app.get("/games", (req, res) => {
+app.get("/games", async (req, res) => {
+  const games = await prisma.game.findMany();
+
   return res.status(201).json({
-    res: "trazer todos os games",
+    games,
   });
 });
 

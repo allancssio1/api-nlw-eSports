@@ -11,23 +11,23 @@ datasource db {
 }
 
 model Game {
-  id        String @id
+  id        String @id @default(uuid())
   title     String
   bannerUrl String
-  Ad        Ad[]
+  ads       Ad[]
 }
 
 model Ad {
-  id              String   @id
+  id              String   @id @default(uuid())
   name            String
-  yeartPlaying    Int
+  yearsPlaying    Int
   discord         String
   weekDays        String
   hourStart       Int
   hourEnd         Int
   useVoiceChannel Boolean
-  createAt        DateTime @default(now())
-  // um ads é atribuido a um game, e um game pode ter vários ads
-  game            Game     @relation(fields: [gameId], references: [id])
-  gameId          String
+  createdAt       DateTime @default(now())
+
+  game   Game   @relation(fields: [gameId], references: [id])
+  gameId String
 }

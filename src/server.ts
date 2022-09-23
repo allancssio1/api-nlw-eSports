@@ -8,19 +8,58 @@ const app = express();
 const prisma = new PrismaClient();
 
 app.get("/games", async (req, res) => {
-  const games = await prisma.game.findMany();
-
-  return res.status(201).json({
-    games,
+  const games = await prisma.game.findMany({
+    include: {
+      _count: {
+        select: {
+          ads: true,
+        },
+      },
+    },
   });
+
+  return res.status(201).json({ games });
 });
 
 app.get("/ads", (req, res) => {
   return res.status(201).json({ res: "todos os anúcios" });
 });
 
-app.get("/games/:id/ads", (req, res) => {
-  return res.status(201).json({ res: "ads expecífico" });
+app.get("/games/:id/ads", async (req, res) => {
+  const gameId = req.params.id;
+
+  /**
+   * findMany é selecionar muitos
+   * select é para filtrar o que vai ser trasido
+   * orderBy é para ordenar por data de criação
+   */
+  const ads = await prisma.ad.findMany({
+    select: {
+      createdAt: true,
+      hourEnd: true,
+      hourStart: true,
+      id: true,
+      name: true,
+      useVoiceChannel: true,
+      weekDays: true,
+      discord: true,
+    },
+    where: {
+      gameId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return res.status(201).json(
+    ads.map((ad) => {
+      return {
+        ...ad,
+        weekDays: ad.weekDays.split(","),
+      };
+    }),
+  );
 });
 
 app.get("/ads/:id/discord", (req, res) => {

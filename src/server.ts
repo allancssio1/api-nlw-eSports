@@ -1,11 +1,29 @@
 import express from "express";
+import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import {
+  convertHourStringToMinutes,
+  convertMinuteToHouresString,
+} from "./utils/converterHours";
 /**
  * Para usar o prisma foi instalado o @prisma/client como dependencia de produção.
  * instanciado ele numa constante para ter acesso ao banco de dados.
  */
 const app = express();
 const prisma = new PrismaClient();
+
+app.use(express.json());
+//permitir acesso somente desse endereço
+/**
+ *  app.use(
+ *    cors({
+ *      origin: "https://meuSite.com.br",
+ *    }),
+ *  );
+ * */
+
+//Permitir acesso de qualquer endereço
+app.use(cors());
 
 app.get("/games", async (req, res) => {
   const games = await prisma.game.findMany({
@@ -26,7 +44,7 @@ app.get("/ads", (req, res) => {
 });
 
 app.get("/games/:id/ads", async (req, res) => {
-  const gameId = req.params.id;
+  const gameId: string = req.params.id;
 
   /**
    * findMany é selecionar muitos
@@ -57,18 +75,47 @@ app.get("/games/:id/ads", async (req, res) => {
       return {
         ...ad,
         weekDays: ad.weekDays.split(","),
+        hourEnd: convertMinuteToHouresString(ad.hourEnd),
+        hourStart: convertMinuteToHouresString(ad.hourStart),
       };
     }),
   );
 });
 
-app.get("/ads/:id/discord", (req, res) => {
-  return res.status(201).json({ res: "discord expecífico" });
+app.get("/ads/:id/discord", async (req, res) => {
+  const adId: string = req.params.id;
+
+  const ads = await prisma.ad.findUniqueOrThrow({
+    select: {
+      discord: true,
+    },
+    where: {
+      id: adId,
+    },
+  });
+
+  return res.status(201).json({ discord: ads.discord });
 });
 
-app.post("/ads", (req, res) => {
+app.post("/games/:id/ads", async (req, res) => {
+  const newAds = req.body;
+  const gameId: string = req.params.id;
+
+  const ad = await prisma.ad.create({
+    data: {
+      gameId,
+      name: newAds.name,
+      yearsPlaying: newAds.yearsPlaying,
+      discord: newAds.discord,
+      weekDays: newAds.weekDays.join(","),
+      hourStart: convertHourStringToMinutes(newAds.hourStart),
+      hourEnd: convertHourStringToMinutes(newAds.hourEnd),
+      useVoiceChannel: newAds.useVoiceChannel,
+    },
+  });
+
   return res.status(201).json({
-    res: "criar anuncio",
+    ad,
   });
 });
 

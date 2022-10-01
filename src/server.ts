@@ -1,10 +1,10 @@
-import express from "express";
-import cors from "cors";
-import { PrismaClient } from "@prisma/client";
+import express from 'express';
+import cors from 'cors';
+import { PrismaClient } from '@prisma/client';
 import {
   convertHourStringToMinutes,
   convertMinuteToHouresString,
-} from "./utils/converterHours";
+} from './utils/converterHours';
 /**
  * Para usar o prisma foi instalado o @prisma/client como dependencia de produção.
  * instanciado ele numa constante para ter acesso ao banco de dados.
@@ -25,7 +25,7 @@ app.use(express.json());
 //Permitir acesso de qualquer endereço
 app.use(cors());
 
-app.get("/games", async (req, res) => {
+app.get('/games', async (req, res) => {
   const games = await prisma.game.findMany({
     include: {
       _count: {
@@ -39,11 +39,13 @@ app.get("/games", async (req, res) => {
   return res.status(201).json({ games });
 });
 
-app.get("/ads", (req, res) => {
-  return res.status(201).json({ res: "todos os anúcios" });
+app.get('/ads', async (req, res) => {
+  const ads = await prisma.ad.findMany();
+
+  return res.status(201).json({ ads });
 });
 
-app.get("/games/:id/ads", async (req, res) => {
+app.get('/games/:id/ads', async (req, res) => {
   const gameId: string = req.params.id;
 
   /**
@@ -66,7 +68,7 @@ app.get("/games/:id/ads", async (req, res) => {
       gameId,
     },
     orderBy: {
-      createdAt: "desc",
+      createdAt: 'desc',
     },
   });
 
@@ -74,7 +76,7 @@ app.get("/games/:id/ads", async (req, res) => {
     ads.map((ad) => {
       return {
         ...ad,
-        weekDays: ad.weekDays.split(","),
+        weekDays: ad.weekDays.split(','),
         hourEnd: convertMinuteToHouresString(ad.hourEnd),
         hourStart: convertMinuteToHouresString(ad.hourStart),
       };
@@ -82,7 +84,7 @@ app.get("/games/:id/ads", async (req, res) => {
   );
 });
 
-app.get("/ads/:id/discord", async (req, res) => {
+app.get('/ads/:id/discord', async (req, res) => {
   const adId: string = req.params.id;
 
   const ads = await prisma.ad.findUniqueOrThrow({
@@ -97,7 +99,7 @@ app.get("/ads/:id/discord", async (req, res) => {
   return res.status(201).json({ discord: ads.discord });
 });
 
-app.post("/games/:id/ads", async (req, res) => {
+app.post('/games/:id/ads', async (req, res) => {
   const newAds = req.body;
   const gameId: string = req.params.id;
 
@@ -107,7 +109,7 @@ app.post("/games/:id/ads", async (req, res) => {
       name: newAds.name,
       yearsPlaying: newAds.yearsPlaying,
       discord: newAds.discord,
-      weekDays: newAds.weekDays.join(","),
+      weekDays: newAds.weekDays.join(','),
       hourStart: convertHourStringToMinutes(newAds.hourStart),
       hourEnd: convertHourStringToMinutes(newAds.hourEnd),
       useVoiceChannel: newAds.useVoiceChannel,
@@ -119,4 +121,4 @@ app.post("/games/:id/ads", async (req, res) => {
   });
 });
 
-app.listen(3333, () => console.log("Server Running"));
+app.listen(3333, () => console.log('Server Running'));
